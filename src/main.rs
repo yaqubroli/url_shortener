@@ -1,28 +1,34 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+#![allow(unused_assignments)] 
+#![allow(unused_variables)]
+#![allow(unused_imports)]
+#![allow(unused_mut)]
 
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
+use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
+use serde::{Deserialize, Serialize};
+
+#[derive(Deserialize)]
+struct Url {
+    url: String,
 }
 
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    HttpResponse::Ok().body(req_body)
+#[get("/submit")]
+async fn submit(target: web::Form<Url>) -> impl Responder {
+    HttpResponse::Ok().body(&target.url)
 }
 
-async fn manual_hello() -> impl Responder {
-    HttpResponse::Ok().body("Hey there!")
+#[get("/{test}")]
+async fn url(path: web::Path<String,>) -> impl Responder {
+    HttpResponse::Ok().body(path.into_inner())
 }
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     HttpServer::new(|| {
         App::new()
-            .service(hello)
-            .service(echo)
-            .route("/hey", web::get().to(manual_hello))
+            .service(submit)
+            .service(url)
     })
-    .bind(("127.0.0.1", 8080))?
+    .bind(("127.0.0.1", 4000))?
     .run()
     .await
 }
