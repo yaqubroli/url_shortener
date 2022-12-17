@@ -6,14 +6,24 @@
 use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
 use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize)]
-struct Url {
+pub mod database;
+pub mod config;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Submission {
     url: String,
 }
 
-#[get("/submit")]
-async fn submit(target: web::Form<Url>) -> impl Responder {
-    HttpResponse::Ok().body(&target.url)
+#[post("/submit")]
+async fn submit(form: web::Form<Submission>) -> impl Responder {
+    println!("{:?}", form);
+    HttpResponse::Ok().body("You submitted something.")
+}
+
+#[get("/debug")]
+async fn debug(req: HttpRequest) -> impl Responder {
+    println!("{:?}", req);
+    HttpResponse::Ok().body("You submit'n't something.")
 }
 
 #[get("/{test}")]
@@ -23,8 +33,9 @@ async fn url(path: web::Path<String,>) -> impl Responder {
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    let database_connection= database::init(config::retrieve());
     HttpServer::new(|| {
-        App::new()
+       App::new()
             .service(submit)
             .service(url)
     })
