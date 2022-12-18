@@ -9,7 +9,9 @@ build = "build.rs"
 links = "mysqlclient"
 
 [dependencies]
-diesel = { version = "2.0.2", features = ["mysql"] }
+# diesel = { version = "2.0.2", features = ["mysql"] }
 actix-web = "4"
 serde = { version = "1.0", features = ["derive"] }
 confy = "0.5"
+mysql = "23.0.0"
+log = "0.4"
