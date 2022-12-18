@@ -3,10 +3,10 @@ use mysql::*;
 
 use crate::config::{DbConfig};
 
-pub fn init(config: DbConfig) -> Pool {
+pub fn init(db_config: DbConfig) -> Pool {
     let url = format!(
         "mysql://{}:{}@{}:{}/{}",
-        config.user, config.password, config.host, config.port, config.database
+        db_config.user, db_config.password, db_config.host, db_config.port, db_config.database
     );
     println!("Connecting to database at {}.", url);
     let pool = Pool::new(url.as_str()).expect("Unable to connect to database.");
