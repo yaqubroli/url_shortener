@@ -1,12 +1,12 @@
 use mysql::prelude::*;
 use mysql::*;
 
-use crate::config::{DbConfig};
+//use crate::config::{Config};
 
-pub fn init(db_config: DbConfig) -> Pool {
+/* pub fn init(config: Config) -> Pool {
     let url = format!(
         "mysql://{}:{}@{}:{}/{}",
-        db_config.user, db_config.password, db_config.host, db_config.port, db_config.database
+        config.db.user, config.db.password, config.db.host, config.db.port, config.db.database
     );
     println!("Connecting to database at {}.", url);
     let pool = Pool::new(url.as_str()).expect("Unable to connect to database.");
@@ -15,7 +15,7 @@ pub fn init(db_config: DbConfig) -> Pool {
         create_table(&pool);
     }
     pool
-}
+} */
 
 pub fn does_table_exist(pool: &Pool) -> bool {
     let mut conn = pool.get_conn().unwrap();

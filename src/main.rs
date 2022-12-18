@@ -1,42 +1,41 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpRequest, HttpServer, Responder};
-use serde::{Deserialize, Serialize};
+use actix_web::{web, App, HttpServer, middleware::Condition, middleware::Logger, middleware::Compress};
+// use mysql::Pool;
 
 pub mod database;
-pub mod config;
+pub mod endpoints;
+pub mod settings;
 
-#[derive(Serialize, Deserialize, Debug)]
-struct Submission {
-    url: String
-}
-
-#[post("/submit")]
-async fn submit(form: web::Form<Submission>) -> impl Responder {
-    println!("{:?}", form);
-    HttpResponse::Ok().body("You submitted something.")
-}
-
-#[get("/debug")]
-async fn debug(req: HttpRequest) -> impl Responder {
-    println!("{:?}", req);
-    HttpResponse::Ok().body("You submit'n't something.")
-}
-
-#[get("/{test}")]
-async fn url(path: web::Path<String,>) -> impl Responder {
-    HttpResponse::Ok().body(path.into_inner())
-}
+/*
+TODO:
+ * - make config accessible universally, or somehow transfer config data to how functions work
+ * - make database accessible universally
+ * - make shortened url generation
+ * - make shortened url redirect
+ * - implement other functions (pastebin maybe?)
+*/
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let config = config::retrieve();
-    let database_connection= database::init(config.db);
-    println!("Creating HTTP server at {}:{}", config.http.host, config.http.port);
-    HttpServer::new(|| {
-       App::new()
-            .service(submit)
-            .service(url)
+    let settings = settings::init();
+    HttpServer::new(move || {
+        let settings = settings.clone();
+        App::new()
+            // Grab compression settings from config.toml
+            .wrap(Condition::new(
+                settings.actix.enable_compression,
+                Compress::default(),
+            ))
+            // Grab logger settings from config.toml
+            .wrap(Condition::new(
+                settings.actix.enable_log,
+                Logger::default(),
+            ))
+            .app_data(web::Data::new(settings.clone()))
+            .route("/", web::get().to(endpoints::hello))
+            .route("/{filename:.*}", web::get().to(endpoints::file))
+            .route("/", web::post().to(endpoints::submit_url))
     })
-    .bind((config.http.host, config.http.port))?
+    .bind(("127.0.0.1", 4000))?
     .run()
     .await
 }
