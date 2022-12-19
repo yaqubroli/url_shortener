@@ -1,142 +1,98 @@
+use actix_settings::BasicSettings;
+use crate::settings;
+
 use mysql::prelude::*;
 use mysql::*;
 
-//use crate::config::{Config};
+#[derive(Debug)]
+pub struct RetrievedUrl {
+    pub url: String,
+    pub success: bool
+}
 
-/* pub fn init(config: Config) -> Pool {
-    let url = format!(
-        "mysql://{}:{}@{}:{}/{}",
-        config.db.user, config.db.password, config.db.host, config.db.port, config.db.database
-    );
-    println!("Connecting to database at {}.", url);
-    let pool = Pool::new(url.as_str()).expect("Unable to connect to database.");
-    if !does_table_exist(&pool) {
-        println!("Table does not exist. Creating them.");
-        create_table(&pool);
+#[derive(Debug)]
+pub struct SubmittedUrl {
+    pub shortened: String,
+    pub success: bool
+}
+
+// Description: This function takes in a settings struct and returns a mysql connection pool
+pub async fn init (settings: &BasicSettings<settings::AppSettings>) -> Pool {
+    let database_settings = &settings.application.database;
+    let url = format!("mysql://{}:{}@{}:{}/{}", database_settings.username, database_settings.password, database_settings.host, database_settings.port, database_settings.database);
+    let pool = Pool::new(url.as_str()).unwrap();
+    // create the table if it doesn't exist
+    let mut connection = pool.get_conn().unwrap();
+    if create_table(&mut connection).await {
+        println!("Created table `urls`");
+    } else {
+        println!("Table `urls` already exists");
     }
     pool
-} */
-
-pub fn does_table_exist(pool: &Pool) -> bool {
-    let mut conn = pool.get_conn().unwrap();
-    let result: Vec<String> = conn
-        .exec_map(
-            r"
-        SELECT table_name FROM information_schema.tables WHERE table_schema = :database
-    ",
-            params! {
-                "database" => "url_shortener"
-            },
-            |table_name| table_name,
-        )
-        .unwrap();
-    result.len() > 0
 }
 
-pub fn create_table(pool: &Pool) {
-    let mut conn = pool.get_conn().unwrap();
-    conn.query_drop(
-        r"
-        CREATE TABLE IF NOT EXISTS `urls` (
-            `id` INT NOT NULL AUTO_INCREMENT,
-            `url` VARCHAR(255) NOT NULL,
-            `shortened` VARCHAR(255) NOT NULL,
-            PRIMARY KEY (`id`)
-        ) ENGINE=InnoDB;
-    ",
-    )
-    .unwrap();
-    println!("Table created.");
+// Description: This function takes in a connection and a shortened url and returns a RetrievedUrl struct, where `url` is the url column and `success` is true if the shortened url exists in the database
+pub async fn retrieve_url (connection: &mut PooledConn, shortened: &str) -> RetrievedUrl {
+    let mut result = connection.exec_iter("SELECT url FROM urls WHERE shortened = :shortened", params! {
+        "shortened" => shortened
+    }).unwrap();
+    let row = result.next().unwrap();
+    let url = row.unwrap().get::<String, _>("url").unwrap();
+    RetrievedUrl {
+        url,
+        success: true
+    }
 }
 
-pub fn insert_url(pool: &Pool, url: &str, shortened: &str) {
-    let mut conn = pool.get_conn().unwrap();
-    conn.exec_drop(
-        r"
-        INSERT INTO `urls` (`url`, `shortened`) VALUES (:url, :shortened)
-    ",
-        params! {
-            "url" => url,
-            "shortened" => shortened
-        },
-    )
-    .unwrap();
-}
-
-pub fn get_url(pool: &Pool, shortened: &str) -> Option<String> {
-    let mut conn = pool.get_conn().unwrap();
-    let result: Vec<String> = conn
-        .exec_map(
-            r"
-        SELECT `url` FROM `urls` WHERE `shortened` = :shortened
-    ",
-            params! {
+// Description: This function takes in a connection and a url and a shortened url and returns a SubmittedUrl struct, where `shortened` is the shortened url column and `success` is true if the shortened url does not exist in the database
+pub async fn submit_url (connection: &mut PooledConn, url: &str, shortened: &str) -> SubmittedUrl {
+    let row = connection.exec_iter("SELECT shortened FROM urls WHERE shortened = :shortened", params! {
+        "shortened" => shortened
+    }).unwrap().next();
+    if row.is_some() {
+        SubmittedUrl {
+            shortened: shortened.to_string(),
+            success: false
+        }
+    } else {
+        let row = connection.exec_iter("SELECT shortened FROM urls WHERE url = :url", params! {
+            "url" => url
+        }).unwrap().next();
+        if row.is_some() {
+            let shortened = row.unwrap().unwrap().get::<String, _>("shortened").unwrap();
+            SubmittedUrl {
+                shortened,
+                success: true
+            }
+        } else {
+            connection.exec_drop("INSERT INTO urls (url, shortened) VALUES (:url, :shortened)", params! {
+                "url" => url,
                 "shortened" => shortened
-            },
-            |url| url,
-        )
-        .unwrap();
-    result.into_iter().next()
+            }).unwrap();
+            SubmittedUrl {
+                shortened: shortened.to_string(),
+                success: true
+            }
+        }
+    }
 }
 
-pub fn get_shortened(pool: &Pool, url: &str) -> Option<String> {
-    let mut conn = pool.get_conn().unwrap();
-    let result: Vec<String> = conn
-        .exec_map(
-            r"
-        SELECT `shortened` FROM `urls` WHERE `url` = :url
-    ",
-            params! {
-                "url" => url
-            },
-            |shortened| shortened,
-        )
-        .unwrap();
-    result.into_iter().next()
+// Description: This function takes in a connection and returns a u64 which is the number of rows in the table
+pub async fn count_urls (connection: &mut PooledConn) -> u64 {
+    let mut result = connection.exec_iter("SELECT COUNT(*) FROM urls", ()).unwrap();
+    let row = result.next().unwrap();
+    let count = row.unwrap().get::<u64, _>("COUNT(*)").unwrap();
+    count
 }
 
-pub fn url_exists(pool: &Pool, url: &str) -> bool {
-    let mut conn = pool.get_conn().unwrap();
-    let result: Vec<String> = conn
-        .exec_map(
-            r"
-        SELECT `url` FROM `urls` WHERE `url` = :url
-    ",
-            params! {
-                "url" => url
-            },
-            |url| url,
-        )
-        .unwrap();
-    result.len() > 0
+// Description: This function takes in a connection and returns a bool which is true if the table was created
+pub async fn create_table (connection: &mut PooledConn) -> bool {
+    let mut result = connection.exec_iter("CREATE TABLE IF NOT EXISTS urls (url VARCHAR(255) NOT NULL, shortened VARCHAR(255) NOT NULL, PRIMARY KEY (shortened))", ()).unwrap();
+    let row = result.next();
+    if row.is_some() {
+        true
+    } else {
+        false
+    }
 }
 
-pub fn shortened_exists(pool: &Pool, shortened: &str) -> bool {
-    let mut conn = pool.get_conn().unwrap();
-    let result: Vec<String> = conn
-        .exec_map(
-            r"
-        SELECT `shortened` FROM `urls` WHERE `shortened` = :shortened
-    ",
-            params! {
-                "shortened" => shortened
-            },
-            |shortened| shortened,
-        )
-        .unwrap();
-    result.len() > 0
-}
-
-pub fn count_urls(pool: &Pool) -> u64 {
-    let mut conn = pool.get_conn().unwrap();
-    let result: Vec<u64> = conn
-        .exec_map(
-            r"
-        SELECT COUNT(*) FROM `urls`
-    ",
-            (),
-            |count| count,
-        )
-        .unwrap();
-    result.into_iter().next().unwrap()
-}

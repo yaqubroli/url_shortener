@@ -2,6 +2,7 @@
 # For more info, see: https://docs.rs/actix-web/4/actix_web/struct.HttpServer.html.
 
 hosts = [
+    # @ts-ignore
     ["0.0.0.0", 9000]      # This should work for both development and deployment...
     #                      # ... but other entries are possible, as well.
 ]

@@ -1,9 +1,10 @@
-use actix_settings::{ApplySettings as _, Settings, BasicSettings};
+use actix_settings::{BasicSettings};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct AppSettings {
-    pub database: DatabaseSettings
+    pub database: DatabaseSettings,
+    pub templating: TemplatingSettings
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -13,6 +14,12 @@ pub struct DatabaseSettings {
     pub username: String,
     pub password: String,
     pub database: String
+}
+
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TemplatingSettings {
+    pub enabled: bool,
+    pub domain: String
 }
 
 pub fn init () -> BasicSettings<AppSettings> {
