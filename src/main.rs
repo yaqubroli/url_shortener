@@ -8,12 +8,12 @@ pub mod settings;
 pub mod shortener;
 pub mod url;
 pub mod templating;
+pub mod full_path;
 
 /*
 TODO:
  * - clean up code
- * - add HTML templates
- * - implement other functions (pastebin maybe?)
+ * - add logging
 */
 
 #[derive(Clone)]
@@ -47,8 +47,8 @@ async fn main() -> std::io::Result<()> {
                 .app_data(web::Data::new(app_data.clone()))
                 .route("/", web::get().to(endpoints::index))
                 .route("/static/{filename}", web::get().to(endpoints::static_file))
-                .route("/{shortened}", web::get().to(endpoints::redirect_url))
-                .route("/", web::post().to(endpoints::submit_url))
+                .route("/{shortened}", web::get().to(endpoints::serve_entry))
+                .route("/", web::post().to(endpoints::submit_entry))
         }
     })
     .apply_settings(&settings)

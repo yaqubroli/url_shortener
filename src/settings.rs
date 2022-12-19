@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct AppSettings {
     pub database: DatabaseSettings,
-    pub templating: TemplatingSettings
+    pub html: HtmlSettings
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -17,9 +17,14 @@ pub struct DatabaseSettings {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TemplatingSettings {
-    pub enabled: bool,
-    pub domain: String
+pub struct HtmlSettings {
+    pub template: bool,
+    pub template_index: bool,
+    pub template_static: bool,
+    pub count: bool,
+    pub domain: String,
+    pub path: String,
+    pub static_path: String
 }
 
 pub fn init () -> BasicSettings<AppSettings> {

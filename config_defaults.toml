@@ -71,14 +71,12 @@ private-key = "path/to/cert/key.pem"
 # The `application` table be used to express application-specific settings.
 # See the `README.md` file for more details on how to use this.
 
+[application.html]
+templating = true
+path = "html"
+domain = "localhost:4000"
+
 [application.database]
-# pub struct DatabaseSettings {
-#    pub host: String,
-#    pub port: u16,
-#    pub username: String,
-#    pub password: String,
-#    pub database: String
-# }
 host = "localhost"
 port = 3306
 username = "root"
