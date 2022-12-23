@@ -73,6 +73,7 @@ async fn get_count_and_update_schema (schema: &mut TemplateSchema, app_data: &we
 }
 
 pub async fn get_necessary_value(key: String, key_value: u8, app_data: web::Data<AppData>, schema: &mut TemplateSchema) -> String {
+    println!("Evaluating {}:{}", key, key_value);
     // create a vector of (ContentType, i64) tuples
     match key.as_str() {
         "content" => 

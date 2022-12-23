@@ -70,7 +70,6 @@ a {
     border-radius: 1em;
 }
 
-/* make .text, which is an input text field, use the same font as the rest of the website. make it a black box with a thick white outline */
 .text {
     display: block;
     font-family: monospace;
@@ -79,6 +78,7 @@ a {
     border: 2px dashed white;
     padding: 0.5em 1em;
     margin: 1em 0;
+    width: 100%;
 }
 
 /* make .button a black button with thick white outline that uses the same font as the rest of the website */
@@ -98,4 +98,17 @@ a {
 textarea {
     width: 20em;
     height: 10em;
+}
+
+.url {
+    font-family: monospace !important;
+    color: white !important;
+    display: block;
+    /* make normal case */
+    text-transform: none !important;
+    margin-bottom: 1em;
+}
+
+.domain {
+    color: lightgray !important;
 }
