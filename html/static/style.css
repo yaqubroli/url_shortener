@@ -1,5 +1,101 @@
+@keyframes fadeInDownward {
+    0% {
+        opacity: 0;
+        transform: translateY(-30px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@font-face {
+    font-family: "HK Grotesk";
+    src: url("/static/HKGroteskWide-SemiBold.otf");
+}
+
+html {
+    height: 100%;
+    background: linear-gradient(#650b0b, #ab1616);
+}
+
+h1 {
+    display: none;
+}
+
+main {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+main * {
+    animation-name: fadeInDownward;
+    animation-duration: 1s;
+}
+
 body {
-    font-family: sans-serif;
-    background-color: #f0f0f0;
+    font-family: "HK Grotesk";
+    font-size: 1.5em;
+    text-transform: uppercase;
     text-align: center;
+    color: white;
+}
+
+#logo {
+    width: 25em;
+    margin-bottom: 2.5em;
+}
+
+/* if viewport is iphone sized */
+@media screen and (max-width: 375px) {
+    #logo {
+        max-width: 75%;
+        min-width: 10em;
+    }
+}
+
+a {
+    color: white;
+    text-decoration: none;
+    border-bottom: 2px solid white;
+}
+
+/* make #ui a rounded black rectangle with lots of padding */
+#ui {
+    display: inline-block;
+    padding: 1em 2em;
+    background: black;
+    border-radius: 1em;
+}
+
+/* make .text, which is an input text field, use the same font as the rest of the website. make it a black box with a thick white outline */
+.text {
+    display: block;
+    font-family: monospace;
+    color: white;
+    background: black;
+    border: 2px dashed white;
+    padding: 0.5em 1em;
+    margin: 1em 0;
+}
+
+/* make .button a black button with thick white outline that uses the same font as the rest of the website */
+.button {
+    font-family: "HK Grotesk";
+    text-transform: uppercase;
+    text-align: center;
+    color: black;
+    background: white;
+    border: none;
+    padding: 0.5em 1em;
+    /* make the button a rounded rectangle */
+    border-radius: 1em;
+}
+
+/* make textarea a reasonable size by default */
+textarea {
+    width: 20em;
+    height: 10em;
 }

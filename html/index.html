@@ -1,25 +1,15 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>URL submission form</title>
-    <meta charset="utf-8" />
-    <link rel="stylesheet" href="static/style.css" />
+<link rel="stylesheet" href="static/style.css">
+<title>7800.io</title> 
 </head>
 <body>
-    <h1>URL shortener</h1>
-    <form action="/" method="post">
-        <input type="hidden" name="content_type" value="Url" />
-        <label for="content">URL:</label>
-        <input type="text" name="content" id="url" />
-        <input type="submit" value="Shorten" />
-    </form>
-    <hr>
-    <h1>Pastebin</h1>
-    <form action="/" method="post">
-        <input type="hidden" name="content_type" value="Pastebin" />
-        <label for="content">Paste:</label>
-        <textarea name="content" id="paste" rows="10" cols="50"></textarea>
-        <input type="submit" value="Paste" />
-    </form>
+    <h1>7800.io</h1>
+    <main>
+        <img src="static/7800.svg" alt="7800.io" id="logo">
+        <p>7800.io is the future host of services that provide dynamically generated content.</p>
+        <small>In the meantime, use this domain as a <a href="static/url.html">URL shortener</a> or as a <a>pastebin</a>.</small>
+    </main>
 </body>
 </html>

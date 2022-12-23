@@ -1,9 +1,8 @@
 use std::path::PathBuf;
-use actix_files::NamedFile;
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, Responder, HttpRequest};
 use serde::{Deserialize, Serialize};
 
-use crate::{database, shortener, url, templating, full_path};
+use crate::{database, templating, full_path};
 use crate::database::ContentType;
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -12,27 +11,21 @@ pub struct Submission {
     content_type: ContentType
 }
 
-pub async fn static_file(path: web::Path<String>, app_data: web::Data<crate::AppData>) -> impl Responder {
+pub async fn static_file(path: web::Path<String>, req: HttpRequest, app_data: web::Data<crate::AppData>) -> impl Responder {
     let path_string = path.into_inner();
     println!("Accessing file {:?}", path_string);
-    let body = if app_data.config.application.html.template_static && path_string.ends_with(".html") {
-        templating::read_and_apply_templates(
-            full_path::get_full_path(&app_data, &path_string, true),
-            templating::TemplateSchema {
-                content: "".to_string(),
-                shortened: "".to_string(),
-                domain: app_data.config.application.html.domain.clone(),
-                count: if app_data.config.application.html.count {
-                    database::count_entries(&mut app_data.database.get_conn().unwrap(), ContentType::All).await.to_string()
-                } else {
-                    "".to_string()
-                }
-            }
+    if app_data.config.application.html.template_static && path_string.ends_with(".html") {
+        HttpResponse::Ok().body(
+            templating::read_and_apply_templates(
+                full_path::get_full_path(&app_data, &path_string, true),
+                app_data.clone(),
+                &mut templating::TemplateSchema::create_null_schema()
+            ).await
         )
     } else {
-        std::fs::read_to_string(full_path::get_full_path(&app_data, &path_string, true)).unwrap()
-    };
-    HttpResponse::Ok().body(body)
+        // get the file we want to access as stream
+        actix_files::NamedFile::open_async(full_path::get_full_path(&app_data, &path_string, true)).await.unwrap().into_response(&req)
+    }
 }
 
 pub async fn index(app_data: web::Data<crate::AppData>) -> impl Responder {
@@ -45,17 +38,9 @@ pub async fn index(app_data: web::Data<crate::AppData>) -> impl Responder {
                     "index.html", 
                     false
                 ),
-                templating::TemplateSchema {
-                    content: "".to_string(),
-                    shortened: "".to_string(),
-                    domain: app_data.config.application.html.domain.clone(),
-                    count: if app_data.config.application.html.count {
-                        database::count_entries(&mut app_data.database.get_conn().unwrap(), ContentType::All).await.to_string()
-                    } else {
-                        "".to_string()
-                    }
-                }
-            )
+                app_data,
+                &mut templating::TemplateSchema::create_null_schema()
+            ).await
         )
     } else {
         HttpResponse::Ok().body(
@@ -84,13 +69,15 @@ pub async fn submit_entry(form: web::Form<Submission>, app_data: web::Data<crate
                                 "paste.html"
                             }, 
                             false),
-                        templating::TemplateSchema {
-                            content: form.content.clone(),
-                            shortened: submitted_entry.shortened.clone(),
-                            domain: app_data.config.application.html.domain.clone(),
-                            count: count.to_string()
-                        }
-                    )
+                        app_data.clone(),
+                        &mut templating::TemplateSchema::new(
+                            (
+                                form.content.clone(),
+                                submitted_entry.shortened.clone(),
+                                count
+                            )
+                        )
+                    ).await
                 );
             } else {
                 // If the content type is a URL, tell them the shortened URL, otherwise tell them the paste ID
@@ -124,17 +111,9 @@ pub async fn serve_entry(path: web::Path<String>, app_data: web::Data<crate::App
             if app_data.config.application.html.template {
                 templating::read_and_apply_templates(
                     full_path::get_full_path(&app_data, "404.html", false),
-                    templating::TemplateSchema {
-                        content: "".to_string(),
-                        shortened: "".to_string(),
-                        domain: app_data.config.application.html.domain.clone(),
-                        count: if app_data.config.application.html.count {
-                            database::count_entries(&mut app_data.database.get_conn().unwrap(), ContentType::All).await.to_string()
-                        } else {
-                            "".to_string()
-                        }
-                    }
-                )
+                    app_data.clone(),
+                    &mut templating::TemplateSchema::create_null_schema()
+                ).await
             } else {
                 std::fs::read_to_string(PathBuf::from(format!("static/404.html"))).unwrap()
             }

@@ -1,6 +1,6 @@
 use actix_settings::BasicSettings;
 use serde::{Serialize, Deserialize};
-use crate::{settings, shortener};
+use crate::{settings, shortener, url};
 
 use mysql::prelude::*;
 use mysql::*;
@@ -31,6 +31,27 @@ impl From<ContentType> for u8 {
             ContentType::Pastebin => 1,
             ContentType::All => 255,
             _ => 255
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub struct Count {
+    pub count: u64,
+    pub content_type: ContentType
+}
+
+impl From<Count> for u64 {
+    fn from(item: Count) -> Self {
+        item.count
+    }
+}
+
+impl From<u64> for Count {
+    fn from(item: u64) -> Self {
+        Count {
+            count: item,
+            content_type: ContentType::All
         }
     }
 }
@@ -120,20 +141,26 @@ pub async fn submit_url (connection: &mut PooledConn, url: &str, shortened: &str
 }
 
 // Description: This function takes in a connection and a ContentType, and counts the number of entries with that content_type
-pub async fn count_entries (connection: &mut PooledConn, content_type: ContentType) -> u64 {
+pub async fn count_entries (connection: &mut PooledConn, content_type: ContentType) -> Count {
     // if content_type is ContentType::All, then we don't need to filter by content_type
     if content_type == ContentType::All {
         let mut result = connection.exec_iter("SELECT COUNT(*) FROM entries", ()).unwrap();
         let row = result.next().unwrap();
         let count = row.unwrap().get::<u64, _>("COUNT(*)").unwrap();
-        return count;
+        return Count {
+            count,
+            content_type
+        };
     }
     let mut result = connection.exec_iter("SELECT COUNT(*) FROM entries WHERE content_type = :content_type", params! {
-        "content_type" => content_type as u8
+        "content_type" => content_type.clone() as u8
     }).unwrap();
     let row = result.next().unwrap();
     let count = row.unwrap().get::<u64, _>("COUNT(*)").unwrap();
-    count
+    Count {
+        count,
+        content_type
+    }
 }
 
 // Description: This function takes in a connection and a shortened url and returns a RetrievedEntry struct, where `content` is the content column and `success` is true if the shortened url exists in the database
@@ -141,7 +168,7 @@ pub async fn retrieve_entry (connection: &mut PooledConn, shortened: &str) -> Re
     let mut result = connection.exec_iter("SELECT content, content_type FROM entries WHERE shortened = :shortened", params! {
         "shortened" => shortened
     }).unwrap();
-    let row = result.next().unwrap();
+    let row = result.next().expect("No entry found");
     let content = row.as_ref().unwrap().get::<String, _>("content").unwrap();
     let content_type = ContentType::from(row.as_ref().unwrap().get::<u8, _>("content_type").unwrap());
     RetrievedEntry {
@@ -153,7 +180,7 @@ pub async fn retrieve_entry (connection: &mut PooledConn, shortened: &str) -> Re
 
 // Description: This function takes in a connection, a `content` string, and a content_type u8 and returns a SubmittedEntry struct, where `shortened` is the shortened url column and `success` is true if the shortened url does not exist in the database.
 pub async fn submit_entry (connection: &mut PooledConn, content: &str, content_type: &ContentType) -> SubmittedEntry {
-    let shortened = shortener::base64(count_entries(connection, ContentType::All).await);
+    let shortened = shortener::base64(count_entries(connection, ContentType::All).await.count);
     let row = connection.exec_iter("SELECT shortened FROM entries WHERE shortened = :shortened", params! {
         "shortened" => shortened.clone()
     }).unwrap().next();
@@ -164,7 +191,12 @@ pub async fn submit_entry (connection: &mut PooledConn, content: &str, content_t
         }
     } else {
         connection.exec_drop("INSERT INTO entries (content, shortened, content_type) VALUES (:content, :shortened, :content_type)", params! {
-            "content" => content,
+            "content" => 
+                if content_type == &ContentType::Url {
+                    url::format_url(content.to_string())
+                } else {
+                    content.to_string()
+                },
             "shortened" => shortened.clone(),
             "content_type" => u8::from(content_type.clone())
         }).unwrap();
