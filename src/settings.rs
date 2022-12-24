@@ -21,7 +21,6 @@ pub struct HtmlSettings {
     pub template: bool,
     pub template_index: bool,
     pub template_static: bool,
-    pub count: bool,
     pub domain: String,
     pub path: String,
     pub static_path: String
