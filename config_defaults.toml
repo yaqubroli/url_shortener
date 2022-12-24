@@ -3,7 +3,7 @@
 
 hosts = [
     # @ts-ignore
-    ["0.0.0.0", 9000]      # This should work for both development and deployment...
+    ["127.0.0.1", 4000]      # This should work for both development and deployment...
     #                      # ... but other entries are possible, as well.
 ]
 mode = "development"       # Either "development" or "production".
@@ -72,13 +72,17 @@ private-key = "path/to/cert/key.pem"
 # See the `README.md` file for more details on how to use this.
 
 [application.html]
-templating = true
+template = true
+template_index = true
+template_static = true
+count = true
 path = "html"
+static_path = "static"
 domain = "localhost:4000"
 
 [application.database]
-host = "localhost"
+host = "7800.io"
 port = 3306
-username = "root"
-password = "password"
-database = "database"
+username = "rms"
+password = "hunter2"
+database = "url_shortener"
