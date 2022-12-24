@@ -135,55 +135,23 @@ input[type=text] {
     min-width: 5em;
 }
 
-@keyframes buttonRaise {
-    0% {
-        /* make the buttons look like they're being pressed when clicked */
-        transform: translateY(0px);
-        box-shadow: 0 0 0 0 rgb(60, 0, 0);
-    }
-    100% {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 0 0 rgb(60, 0, 0);
-    }
-    
-}
-
 /* make the buttons look like they're being pressed when clicked */
 #indexbuttonrow a:hover {
-    animation-name: buttonRaise;
-    animation-duration: 0.2s;
-    animation-fill-mode: forwards;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 0 rgb(60, 0, 0);
 }
 
 #indexbuttonrow a:active {
-    animation-name: buttonRaise;
-    animation-duration: 0.2s;
-    animation-fill-mode: forwards;
-    animation-direction: reverse;
-}
-
-@keyframes buttonRaise_2 {
-    0% {
-        /* make the buttons look like they're being pressed when clicked */
-        transform: translateY(0px);
-        box-shadow: 0 0 0 0 rgb(183, 183, 183);
-    }
-    100% {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 0 0 rgb(183, 183, 183);
-    }
-    
+    transform: none;
+    box-shadow: none;
 }
 
 .button:hover {
-    animation-name: buttonRaise_2;
-    animation-duration: 0.2s;
-    animation-fill-mode: forwards;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 0 rgb(183, 183, 183);
 }
 
 .button:active {
-    animation-name: buttonRaise_2;
-    animation-duration: 0.2s;
-    animation-fill-mode: forwards;
-    animation-direction: reverse;
+    transform: none;
+    box-shadow: none;
 }

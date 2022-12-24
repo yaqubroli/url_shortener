@@ -21,14 +21,14 @@ A fully populated config.toml is required to run the server. The parameters that
 
 The parameters specific to the url shortener are:
 
-* [application.html] → Things related to HTML and templating
+* `[application.html]` → Things related to HTML and templating
     * `template` → Whether to template at all or not
     * `template_index` → Whether to template the index.html (/)
     * `template_static` → Whether to template static html (this is sometimes needed as the submission form is often on a static page, as it is in this repo's example html)
     * `path` → the path that html will be read from. Might want to make this /var/www/url_shortener, for instance.
     * `static_path` → the subdirectory of `path` where static is stored. Unlike the above, this is actually displayed as part of the url.
     * `domain` → The domain you're hosting from, used for templating
-* [application.database] → Things related to connecting to the mSQL database
+* `[application.database]` → Things related to connecting to the mySQL database
     * `host`
     * `port` → Usually 3306.
     * `username`
