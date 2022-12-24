@@ -79,6 +79,11 @@ pub struct RetrievedEntry {
     pub content_type: ContentType
 }
 
+// This function sanitizes the input to prevent SQL injection
+fn sanitize_input (input: String) -> String {
+    input.replace("'", "''")
+}
+
 // Description: This function takes in a settings struct and returns a mysql connection pool
 pub async fn init (settings: &BasicSettings<settings::AppSettings>) -> Pool {
     let database_settings = &settings.application.database;
@@ -193,9 +198,9 @@ pub async fn submit_entry (connection: &mut PooledConn, content: &str, content_t
         connection.exec_drop("INSERT INTO entries (content, shortened, content_type) VALUES (:content, :shortened, :content_type)", params! {
             "content" => 
                 if content_type == &ContentType::Url {
-                    url::format_url(content.to_string())
+                    sanitize_input(url::format_url(content.to_string()))
                 } else {
-                    content.to_string()
+                    sanitize_input(content.to_string())
                 },
             "shortened" => shortened.clone(),
             "content_type" => u8::from(content_type.clone())
