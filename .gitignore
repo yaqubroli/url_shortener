@@ -1,5 +1,5 @@
 target/**
-.vscode/
-.vscode
+.vscode/**
 target
+vscode
 config.toml
