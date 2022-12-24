@@ -78,7 +78,6 @@ a {
     border: 2px dashed white;
     padding: 0.5em 1em;
     margin: 1em 0;
-    width: 100%;
 }
 
 /* make .button a black button with thick white outline that uses the same font as the rest of the website */
@@ -100,6 +99,11 @@ textarea {
     height: 10em;
 }
 
+/* make text input a reasonable size by default */
+input[type=text] {
+    width: 20em;
+}
+
 .url {
     font-family: monospace !important;
     color: white !important;
@@ -111,4 +115,22 @@ textarea {
 
 .domain {
     color: lightgray !important;
+}
+
+#indexbuttonrow {
+    display: flex;
+    justify-content: center;
+    margin-top: 1em;
+}
+
+#indexbuttonrow a {
+    font-size: 0.8em;
+    color: white;
+    background: black;
+    border: none;
+    padding: 0.5em 1em;
+    border-radius: 1em;
+    margin: 0 0.5em;
+    /* make the buttons the same size */
+    min-width: 5em;
 }
