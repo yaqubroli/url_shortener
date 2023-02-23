@@ -1,6 +1,6 @@
 # Unnamed combination URL shortener/pastebin
 
-This is a combination URL shortener/pastebin written in Rust and [actix-web](https://github.com/actix/actix-web). It supports connecting to any mySQL server. It currently runs the landing page on https://7800.io/.
+This is a combination URL shortener/pastebin written in Rust and [actix-web](https://github.com/actix/actix-web). It supports connecting to any mySQL server.
 
 ## Warning
 
